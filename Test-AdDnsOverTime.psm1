@@ -22,7 +22,7 @@ function Test-AdDnsOverTime {
 	)
 
 	$ts = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
-	$logName = "cbtf-cart01-nic-interface-priority-test_$($ts)"
+	$logName = "Test-AdDnsOverTime_$($ts)"
 	$csv = "$LogDir\$($logName).csv"
 
 	function csv($line) {
