@@ -32,6 +32,7 @@ Test-AdDnsOverTime -Computer $comps -IpRange1 "010.000.000.*" -IpRange2 "172.016
 ### -Computer [string[]]
 Required string array.  
 An array of strings representing the AD computer names to monitor.  
+Note: the header of the console output won't align with the columns if the computer names are >15 characters.  
 
 ### -IpRange1 [string]
 Required string.  
