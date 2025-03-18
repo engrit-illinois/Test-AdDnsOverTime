@@ -60,15 +60,16 @@ function Test-AdDnsOverTime {
 	}
 
 	# Header for console output
-	# cbtf-cart01-01  | 
-	# xxx.xxx.xxx.xxx | 
-	$compsLine = $comps -join "  | "
-	log $compsLine
-	$underline = ""
-	$comps | ForEach-Object {
-		$underline += "----------------|-"
+	$compsPadded = $comps | ForEach-Object {
+		$_.PadRight(15," ")
 	}
-	$underline = $underline.Substring(0,$underline.length -4)
+	$compsLine = $compsPadded -join " | "
+	log $compsLine
+	
+	$underlineSegments = $comps | ForEach-Object {
+		"---------------"
+	}
+	$underline = $underlineSegments -join "-|-"
 	log $underline
 	
 	# Header for CSV
