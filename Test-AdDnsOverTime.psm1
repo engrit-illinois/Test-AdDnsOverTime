@@ -1,26 +1,24 @@
 function Test-AdDnsOverTime {
-
+	[CmdletBinding()]
+	
 	param(
 		[Parameter(Mandatory=$true)]
 		[string[]]$Computer,
 		
-		[Parameter(Mandatory=$true)]
-		[string]$IpRange1,
-		[Parameter(Mandatory=$true)]
-		[string]$IpRange2,
+		[string]$IpRanges,
 		
-		[int]$Loops = 1440,
+		[int]$TestCount = 1440,
 		[int]$IntervalSeconds = 60,
 		[int]$PingCount = 2,
 		[int]$PingTimeoutSeconds = 2,
-
-		[string]$IpRange1Fc = "green",
-		[string]$IpRange2Fc = "yellow",
-		[string]$IpUnknownRangeBc = "red",
+		
+		[string]$IpUnknownRangeFc,
+		[string]$IpUnknownRangeBc,
 		
 		[string]$LogDir = "c:\engrit\logs"
 	)
-
+	
+	# Logging
 	$ts = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
 	$logName = "Test-AdDnsOverTime_$($ts)"
 	$csv = "$LogDir\$($logName).csv"
@@ -37,8 +35,13 @@ function Test-AdDnsOverTime {
 			[ValidateScript({[System.Enum]::GetValues([System.ConsoleColor]) -contains $_})]
 			[string]$BC = (get-host).ui.rawui.BackgroundColor, # background color
 			[switch]$NoTs,
-			[switch]$NoNl
+			[switch]$NoNl,
+			[string]$TestNum
 		)
+		
+		if($TestNum) {
+			$Msg = "[$TestNum] $Msg"
+		}
 		
 		if(-not $NoTs) {
 			$ts = Get-Date -Format "HH:mm:ss"
@@ -55,36 +58,93 @@ function Test-AdDnsOverTime {
 		Write-Host @params
 	}
 	
-	if($Computer) {
-		$compsCount = @($Computer).count
+	function Parse-IpRanges {
+		$IpRanges.Split(";") | ForEach-Object {
+			$rangeParts = $_.Split(":")
+			# A properly-formatted range should have exactly 2 colons
+			if(@($rangeParts).count -ne 3) {
+				Throw "Invalid syntax for -IpRanges parameter. See documentation. Each range must be separated by a semicolon, and should contain exactly 2 colons."
+			}
+			[PSCustomObject]@{
+				Query = $rangeParts[0]
+				FC = $rangeParts[1]
+				BC = $rangeParts[2]
+			}
+		}
 	}
-
-	# Header for console output
-	$compsPadded = $comps | ForEach-Object {
-		$_.PadRight(15," ")
+	
+	function Get-TestNum {
+		param(
+			[int]$Num
+		)
+		$numString = "$Num".PadLeft("$TestCount".length,"0")
+		"Test #$numString/$TestCount"
 	}
-	$compsLine = $compsPadded -join " | "
-	log $compsLine
 	
-	$underlineSegments = $comps | ForEach-Object {
-		"---------------"
+	function Log-Headers {
+		# Header for console output
+		$compsPadded = $comps | ForEach-Object {
+			$_.PadRight(15," ")
+		}
+		$compsLine = $compsPadded -join " | "
+		log $compsLine -TestNum (Get-TestNum -Num 0)
+		
+		$underlineSegments = $comps | ForEach-Object {
+			"---------------"
+		}
+		$underline = $underlineSegments -join "-|-"
+		log $underline -TestNum (Get-TestNum -Num 0)
+		
+		# Header for CSV
+		$compsLineCsv = $comps -join ","
+		csv $compsLineCsv
 	}
-	$underline = $underlineSegments -join "-|-"
-	log $underline
 	
-	# Header for CSV
-	$compsLineCsv = $comps -join ","
-	csv $compsLineCsv
+	function Get-ColorParams($params) {
+		$ip = $params.Msg
+		# If the IP is blank, no need to color it
+		if($ip.Trim() -ne "") {
+			# Only color things if IP ranges were supplied
+			if($ranges) {
+				$recognized = $false
+				$ranges | ForEach-Object {
+					$range = $_
+					if($ipPadded -like $range.Query) {
+						$recognized = $true
+						if($range.FC) {
+							if(($range.FC).length -gt 0) {
+								$params.FC = $range.FC
+							}
+						}
+						if($range.BC) {
+							if(($range.BC).length -gt 0) {
+								$params.BC = $range.BC
+							}
+						}
+					}
+				}
+				
+				if(-not $recognized) {
+					if($IpUnknownRangeFc) {
+						$params.FC = $IpUnknownRangeFc
+					}
+					if($IpUnknownRangeBc) {
+						$params.BC = $IpUnknownRangeBc
+					}
+				}
+			}
+		}
+		
+		$params
+	}
 	
-	# Loop once for each interval
-	@(0..$Loops) | ForEach-Object {
+	function Test-Comps($testNum) {
+		# Console output timestamp and test number for current line
+		log -TestNum (Get-TestNum -Num $testNum) -NoNl
 		
 		# Get results of pings
 		$result = $null
 		$result = Ping-All $comps -Quiet -PassThru -Count $PingCount -TimeoutSeconds $PingTimeoutSeconds | Sort "TargetName"
-		
-		# Console output timestamp for current line
-		log -NoNl
 		
 		# Loop through each IP
 		$i = 0
@@ -103,27 +163,19 @@ function Test-AdDnsOverTime {
 				$ipPadded = $ipPartsPadded -join '.'
 			}
 			
-			# Output line to console
+			# Define log parameters
 			$params = @{
 				Msg = $ipPadded
 				NoNl = $true
 				NoTs = $true
 			}
-			if($ipPadded -ne "               ") {
-				if($ipPadded -like $IpRange1) {
-					$params.FC = $IpRange1Fc
-				}
-				elseif($ipPadded -like $IpRange2) {
-					$params.FC = $IpRange2Fc
-				}
-				else {
-					$params.BC = $IpUnknownRangeBc
-				}
-			}
-			
+			# Colorize IPs if applicable
+			$params = Get-ColorParams $params
+			# Output line to console
 			log @params
 			
-			if($i -lt ($compsCount -1)) {
+			# Using @($Computer).count here instead of @($result).count or @($result.IPv4_IP).count just in case Ping-All returned fewer results than the number of computers it was supposed to ping, although that should not happen.
+			if($i -lt (@($Computer).count -1)) {
 				log " | " -NoNl -NoTs
 			}
 			else {
@@ -142,6 +194,16 @@ function Test-AdDnsOverTime {
 		# Wait for next loop
 		Start-Sleep -Seconds $IntervalSeconds
 	}
+	
+	function Do-Stuff {
+		$ranges = Parse-IpRanges
+		Log-Headers
+		@(1..$TestCount) | ForEach-Object {
+			Test-Comps $_
+		}
+	}
+	
+	Do-Stuff
 
 	log "EOF"
 }

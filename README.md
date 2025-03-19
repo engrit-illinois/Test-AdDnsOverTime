@@ -10,7 +10,7 @@ As an example of the purpose, the original use case was to monitor the IPs retur
 # Behavior
 This script pings a set of AD computer names a given number of times with a given interval in between (e.g. once a minute for 24 hours), and outputs the resulting IPv4 IPs to the console and to a CSV file.  
 
-The script accepts 2 IP ranges, and will color code the console output depending on which range each IP falls in. This is just to make it easier to see changes over time at a glance without actually reading each IP. If desired, the raw CSV output can be similarly and easily color coded in Excel using conditional formatting.  
+The script accepts information about one or more IP ranges, and will color code the console output depending on which range a given IP falls in. This is just to make it easier to see changes over time at a glance without actually reading each IP. If desired, the raw CSV output can be similarly and easily color coded in Excel using conditional formatting.  
 
 Note that IP ranges are accepted and output with leading zeros for padding, such that all IPs are always displayed with the same 15-character width.  
 
@@ -22,7 +22,7 @@ Note that IP ranges are accepted and output with leading zeros for padding, such
 # Example
 ```powershell
 $comps = Get-ADComputer -Filter "name -like 'lt-cart01-*'" | Sort "Name" | Select -ExpandProperty "Name" | Select -First 10
-Test-AdDnsOverTime -Computer $comps -IpRange1 "010.000.000.*" -IpRange2 "172.016.000.*"
+Test-AdDnsOverTime -Computer $comps -IpRanges -IpRanges "010.000.000.*:green:;172.016.000.*::yellow"
 ```
 
 <img title='Screenshot of example console output' alt='Screenshot of example console output' src='./example.png' />
@@ -34,17 +34,20 @@ Required string array.
 An array of strings representing the AD computer names to monitor.  
 Note: the header of the console output won't align with the columns if the computer names are >15 characters.  
 
-### -IpRange1 [string]
-Required string.  
-A wildcard query that should match the string representation of the first IP range you wish to monitor/color code, in zero-padded format.  
-E.g. `010.000.000.*`, or `010.000.*`, etc.  
+### -IpRanges [string]
+Optional string.  
+A specially formatted string representing one or more IP ranges and their properties.  
+Each given IP range has the following properties:
+- A wildcard query string against which each IP will be matched. If an IP matches this query, it will be color coded in the output based on the following 2 properties.
+  - The query string should use a zero-padded format, e.g. `010.000.000.*`, or `010.000.*`, etc.  
+- A foreground color.
+- A background color.
+The properties for each IP range are accepted in colon-delimited format. If either color is omitted, the corresponding colon should still be supplied.   
+The ranges are accepted in semicolon-delimited format.  
+For example, the following value of `-IpRanges` will result in all IPs matching `10.0.0.*` having a green foreground, and all IPs matching `172.16.0.*` having a yellow background: `-IpRanges "010.000.000.*:green:;172.016.000.*::yellow"`.  
+Acceptable color names or integer values are defined here: https://learn.microsoft.com/en-us/dotnet/api/system.consolecolor?view=net-9.0.  
 
-### -IpRange2 [string]
-Required string.  
-A wildcard query that should match the string representation of the second IP range you wish to monitor/color code, in zero-padded format.  
-E.g. `172.016.000.*`, or `172.016.*`, etc.  
-
-### -Loops [int]
+### -TestCount [int]
 Optional integer.  
 The number of pings to perform on each computer in total.  
 Default is `1440` (i.e. the number of minutes in a day).  
@@ -53,10 +56,9 @@ Default is `1440` (i.e. the number of minutes in a day).
 Optional integer.  
 The number of seconds to wait between each ping operation.  
 Default is `60`.  
-Note that this delay happens after the completion of the previous set of ping operations, so values of `-Loops 1440 -IntervalSeconds 60` will take more than 24 hours to complete.  
+Note that this delay happens after the completion of the previous set of ping operations, so values of `-TestCount 1440 -IntervalSeconds 60` will take more than 24 hours to complete.  
 You may wish to account how long a given set of pings will take, so that you don't end up starting a new set of pings before the previous set is finished. The `-PingCount` and `-PingTimeoutSeconds` parameters can help with that.  
 The `Ping-All` module pings systems in parallel, so ideally, each set of pings should take much longer than the longest response time from any given system (i.e. ~ `-PingTimeoutSeconds`).  
-
 ### -PingCount [int]
 Optional integer.  
 The number of individual ping tests to each individual computer for each loop.  
@@ -68,20 +70,15 @@ Optional integer.
 The number of seconds to wait for each individual ping test to a given computer for a given loop, before timing it out and moving on to the next test.  
 Default is `2`.  
 
-### -IpRange1Fc [string]
+### -IpUnknownRangeFc [string]
 Optional string.  
-The foreground color to apply to IPs printed to the console if they match `-IpRange1`.  
-Default is `green`.  
-
-### -IpRange2Fc [string]
-Optional string.  
-The foreground color to apply to IPs printed to the console if they match `-IpRange2`.  
-Default is `yellow`.  
+If specified, the foreground color to apply to IPs printed to the console if they match none of the queries supplied by `-IpRanges`.  
+Has no effect if `-IpRanges` is not specified.  
 
 ### -IpUnknownRangeBc [string]
 Optional string.  
-The background color to apply to IPs printed to the console if they match neither `-IpRange1` nor `-IpRange2`.  
-Default is `red`.  
+If specified, the background color to apply to IPs printed to the console if they match none of the queries supplied by `-IpRanges`.  
+Has no effect if `-IpRanges` is not specified.  
 
 ### -LogDir [string]
 Optional string.  
