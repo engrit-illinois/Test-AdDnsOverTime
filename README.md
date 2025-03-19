@@ -42,6 +42,7 @@ Each given IP range has the following properties:
   - The query string should use a zero-padded format, e.g. `010.000.000.*`, or `010.000.*`, etc.  
 - A foreground color.
 - A background color.
+
 The properties for each IP range are accepted in colon-delimited format. If either color is omitted, the corresponding colon should still be supplied.   
 The ranges are accepted in semicolon-delimited format.  
 For example, the following value of `-IpRanges` will result in all IPs matching `10.0.0.*` having a green foreground, and all IPs matching `172.16.0.*` having a yellow background: `-IpRanges "010.000.000.*:green:;172.016.000.*::yellow"`.  
