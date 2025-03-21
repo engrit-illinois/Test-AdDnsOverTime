@@ -9,8 +9,8 @@ function Test-AdDnsOverTime {
 		
 		[int]$TestCount = 1440,
 		[int]$IntervalSeconds = 60,
-		[int]$PingCount = 2,
-		[int]$PingTimeoutSeconds = 2,
+		[int]$PingCount = 4,
+		[int]$PingTimeoutSeconds = 5,
 		
 		[string]$IpUnknownRangeFc,
 		[string]$IpUnknownRangeBc,
