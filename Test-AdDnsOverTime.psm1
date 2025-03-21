@@ -59,16 +59,18 @@ function Test-AdDnsOverTime {
 	}
 	
 	function Parse-IpRanges {
-		$IpRanges.Split(";") | ForEach-Object {
-			$rangeParts = $_.Split(":")
-			# A properly-formatted range should have exactly 2 colons
-			if(@($rangeParts).count -ne 3) {
-				Throw "Invalid syntax for -IpRanges parameter. See documentation. Each range must be separated by a semicolon, and should contain exactly 2 colons."
-			}
-			[PSCustomObject]@{
-				Query = $rangeParts[0]
-				FC = $rangeParts[1]
-				BC = $rangeParts[2]
+		if($IpRanges) {
+			$IpRanges.Split(";") | ForEach-Object {
+				$rangeParts = $_.Split(":")
+				# A properly-formatted range should have exactly 2 colons
+				if(@($rangeParts).count -ne 3) {
+					throw "Invalid syntax for -IpRanges parameter. See documentation. Each range must be separated by a semicolon, and should contain exactly 2 colons."
+				}
+				[PSCustomObject]@{
+					Query = $rangeParts[0]
+					FC = $rangeParts[1]
+					BC = $rangeParts[2]
+				}
 			}
 		}
 	}
@@ -83,20 +85,20 @@ function Test-AdDnsOverTime {
 	
 	function Log-Headers {
 		# Header for console output
-		$compsPadded = $comps | ForEach-Object {
+		$compsPadded = $Computer | ForEach-Object {
 			$_.PadRight(15," ")
 		}
 		$compsLine = $compsPadded -join " | "
 		log $compsLine -TestNum (Get-TestNum -Num 0)
 		
-		$underlineSegments = $comps | ForEach-Object {
+		$underlineSegments = $Computer | ForEach-Object {
 			"---------------"
 		}
 		$underline = $underlineSegments -join "-|-"
 		log $underline -TestNum (Get-TestNum -Num 0)
 		
 		# Header for CSV
-		$compsLineCsv = $comps -join ","
+		$compsLineCsv = $Computer -join ","
 		csv $compsLineCsv
 	}
 	
@@ -144,7 +146,15 @@ function Test-AdDnsOverTime {
 		
 		# Get results of pings
 		$result = $null
-		$result = Ping-All $comps -Quiet -PassThru -Count $PingCount -TimeoutSeconds $PingTimeoutSeconds | Sort "TargetName"
+		$result = Ping-All $Computer -Quiet -PassThru -Count $PingCount -TimeoutSeconds $PingTimeoutSeconds | Sort "TargetName"
+		
+		if(-not $result) {
+			throw "Failed to get result from Ping-All cmdlet!"
+		}
+		
+		if(@($result).count -ne @($Computer).count) {
+			throw "Number of results from Ping-All not equal to the number of computers given in -Computer!"
+		}
 		
 		# Loop through each IP
 		$i = 0
@@ -196,6 +206,7 @@ function Test-AdDnsOverTime {
 	}
 	
 	function Do-Stuff {
+		$Computer = $Computer | Sort
 		$ranges = Parse-IpRanges
 		Log-Headers
 		@(1..$TestCount) | ForEach-Object {
