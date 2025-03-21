@@ -64,12 +64,12 @@ The `Ping-All` module pings systems in parallel, so ideally, each set of pings s
 Optional integer.  
 The number of individual ping tests to each individual computer for each loop.  
 Normally, ping operations perform 4 tests per ping operation. For the purposes of this script, `1` or `2` is generally sufficient.  
-Default is `2`.  
+Default is `4`.  
 
 ### -PingTimeoutSeconds [int]
 Optional integer.  
 The number of seconds to wait for each individual ping test to a given computer for a given loop, before timing it out and moving on to the next test.  
-Default is `2`.  
+Default is `5`.  
 
 ### -IpUnknownRangeFc [string]
 Optional string.  
