@@ -37,6 +37,7 @@ Note: the header of the console output won't align with the columns if the compu
 ### -IpRanges [string]
 Optional string.  
 A specially formatted string representing one or more IP ranges and their properties.  
+If specified, the given IP ranges will be color coded in the console output as specified.  
 Each given IP range has the following properties:
 - A wildcard query string against which each IP will be matched. If an IP matches this query, it will be color coded in the output based on the following 2 properties.
   - The query string should use a zero-padded format, e.g. `010.000.000.*`, or `010.000.*`, etc.  
