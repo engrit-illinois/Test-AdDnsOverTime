@@ -89,6 +89,7 @@ Has no effect if `-IpRanges` is not specified.
 ### -Abbreviate [int]
 Optional integer.  
 If specified, the console output will attempt to abbreviate the computer names and IPs to a number of characters equal to the given integer value.  
+Has no effect on CSV output.  
 The abbreviation is implmented such that only the last `-Abbreviate` characters of the given computer names and resulting IPs are displayed.  
 Useful in combination with the color values of `-IpRanges`, when you care about fitting more computers on screen and which IP range they respond to, moreso than what the actual IPs are.  
 Recommended value: `3`.  
