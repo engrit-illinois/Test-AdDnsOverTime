@@ -11,9 +11,12 @@ function Test-AdDnsOverTime {
 		[int]$IntervalSeconds = 60,
 		[int]$PingCount = 4,
 		[int]$PingTimeoutSeconds = 5,
+		[switch]$FlushDnsCacheBeforeTests,
 		
 		[string]$IpUnknownRangeFc,
 		[string]$IpUnknownRangeBc,
+		
+		[int]$Abbreviate,
 		
 		[string]$LogDir = "c:\engrit\logs"
 	)
@@ -84,15 +87,30 @@ function Test-AdDnsOverTime {
 	}
 	
 	function Log-Headers {
-		# Header for console output
-		$compsPadded = $Computer | ForEach-Object {
-			$_.PadRight(15," ")
+		$comps = $Computer
+		
+		# Abbreviate if necessary
+		$dataWidth = 15
+		if($Abbreviate) {
+			$dataWidth = $Abbreviate
+			$comps = $comps | ForEach-Object {
+				$_.SubString($_.length - $dataWidth)
+			}
 		}
-		$compsLine = $compsPadded -join " | "
+		
+		# Header for console output
+		$comps = $comps | ForEach-Object {
+			$_.PadRight($dataWidth," ")
+		}
+		$compsLine = $comps -join " | "
 		log $compsLine -TestNum (Get-TestNum -Num 0)
 		
-		$underlineSegments = $Computer | ForEach-Object {
-			"---------------"
+		$underlineSegments = $comps | ForEach-Object {
+			$segment = ""
+			@(1..$dataWidth) | ForEach-Object {
+				$segment = "$($segment)-"
+			}
+			$segment
 		}
 		$underline = $underlineSegments -join "-|-"
 		log $underline -TestNum (Get-TestNum -Num 0)
@@ -140,6 +158,11 @@ function Test-AdDnsOverTime {
 		$params
 	}
 	
+	function Flush-Dns {
+		#ipconfig -flushdns
+		Clear-DnsClientCache
+	}
+	
 	function Test-Comps($testNum) {
 		# Console output timestamp and test number for current line
 		log -TestNum (Get-TestNum -Num $testNum) -NoNl
@@ -181,6 +204,12 @@ function Test-AdDnsOverTime {
 			}
 			# Colorize IPs if applicable
 			$params = Get-ColorParams $params
+			
+			# Abbreviate if necessary
+			if($Abbreviate) {
+				$params.Msg = ($params.Msg).SubString(($params.Msg).length - $Abbreviate)
+			}			
+			
 			# Output line to console
 			log @params
 			
@@ -210,6 +239,9 @@ function Test-AdDnsOverTime {
 		$ranges = Parse-IpRanges
 		Log-Headers
 		@(1..$TestCount) | ForEach-Object {
+			if($FlushDnsCacheBeforeTests) {
+				Flush-Dns
+			}
 			Test-Comps $_
 		}
 	}

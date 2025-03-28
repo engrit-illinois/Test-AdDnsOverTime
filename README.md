@@ -32,7 +32,7 @@ Test-AdDnsOverTime -Computer $comps -IpRanges -IpRanges "010.000.000.*:green:;17
 ### -Computer [string[]]
 Required string array.  
 An array of strings representing the AD computer names to monitor.  
-Note: the header of the console output won't align with the columns if the computer names are >15 characters.  
+Note: Currently the behavior of the console output is undefined when computer names are >15 characters.  
 
 ### -IpRanges [string]
 Optional string.  
@@ -72,6 +72,10 @@ Optional integer.
 The number of seconds to wait for each individual ping test to a given computer for a given loop, before timing it out and moving on to the next test.  
 Default is `5`.  
 
+### -FlushDnsCacheBeforeTests
+Optional switch.  
+If specified the local DNS client cache is cleared before each round of tests.  
+
 ### -IpUnknownRangeFc [string]
 Optional string.  
 If specified, the foreground color to apply to IPs printed to the console if they match none of the queries supplied by `-IpRanges`.  
@@ -81,6 +85,12 @@ Has no effect if `-IpRanges` is not specified.
 Optional string.  
 If specified, the background color to apply to IPs printed to the console if they match none of the queries supplied by `-IpRanges`.  
 Has no effect if `-IpRanges` is not specified.  
+
+### -Abbreviate [int]
+Optional integer.  
+If specified, the console output will attempt to abbreviate the computer names and IPs to a number of characters equal to the given integer value.  
+The abbreviation is implmented such that only the last `-Abbreviate` characters of the given computer names and resulting IPs are displayed.  
+Useful in combination with the color values of `-IpRanges`, when you care about fitting more computers on screen and which IP range they respond to, moreso than what the actual IPs are.  
 
 ### -LogDir [string]
 Optional string.  
