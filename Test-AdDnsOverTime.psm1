@@ -16,7 +16,9 @@ function Test-AdDnsOverTime {
 		[string]$IpUnknownRangeFc,
 		[string]$IpUnknownRangeBc,
 		
-		[int]$Abbreviate,
+		[int]$TruncateTo,
+		[switch]$ReverseTruncationForComputers,
+		[switch]$ReverseTruncationForIps,
 		
 		[string]$LogDir = "c:\engrit\logs"
 	)
@@ -89,12 +91,17 @@ function Test-AdDnsOverTime {
 	function Log-Headers {
 		$comps = $Computer
 		
-		# Abbreviate if necessary
+		# Truncate if necessary
 		$dataWidth = 15
-		if($Abbreviate) {
-			$dataWidth = $Abbreviate
+		if($TruncateTo) {
+			$dataWidth = $TruncateTo
 			$comps = $comps | ForEach-Object {
-				$_.SubString($_.length - $dataWidth)
+				if($ReverseTruncationForComputers) {
+					$_.SubString(0, $dataWidth)
+				}
+				else {
+					$_.SubString($_.length - $dataWidth)
+				}
 			}
 		}
 		
@@ -205,10 +212,15 @@ function Test-AdDnsOverTime {
 			# Colorize IPs if applicable
 			$params = Get-ColorParams $params
 			
-			# Abbreviate if necessary
-			if($Abbreviate) {
-				$params.Msg = ($params.Msg).SubString(($params.Msg).length - $Abbreviate)
-			}			
+			# Truncate if necessary
+			if($TruncateTo) {
+				if($ReverseTruncationForIps) {
+					$params.Msg = ($params.Msg).SubString(0, $TruncateTo)
+				}
+				else {
+					$params.Msg = ($params.Msg).SubString(($params.Msg).length - $TruncateTo)
+				}
+			}
 			
 			# Output line to console
 			log @params

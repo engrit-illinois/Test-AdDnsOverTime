@@ -86,13 +86,21 @@ Optional string.
 If specified, the background color to apply to IPs printed to the console if they match none of the queries supplied by `-IpRanges`.  
 Has no effect if `-IpRanges` is not specified.  
 
-### -Abbreviate [int]
+### -TruncateTo [int]
 Optional integer.  
-If specified, the console output will attempt to abbreviate the computer names and IPs to a number of characters equal to the given integer value.  
+If specified, the console output will attempt to truncate the computer names and IPs to a number of characters equal to the given integer value.  
 Has no effect on CSV output.  
-The abbreviation is implmented such that only the last `-Abbreviate` characters of the given computer names and resulting IPs are displayed.  
-Useful in combination with the color values of `-IpRanges`, when you care about fitting more computers on screen and which IP range they respond to, moreso than what the actual IPs are.  
+By default, the computer names and IPs are truncated such that only the last `-TruncateTo` characters are displayed. This can be reveresed with the `-ReverseTruncationFor...` parameters.  
+Useful in combination with the color values of `-IpRanges`, when you care mostly about fitting more computers on screen and which IP range they respond to, moreso than what the actual IPs are.  
 Recommended value: `3`.  
+
+### ReverseTruncationForComputers
+Optional switch.  
+If specified, the computer names are truncated such that only the _first_ `-TruncateTo` characters are displayed.  
+
+### ReverseTruncationForIps
+Optional switch.  
+If specified, the IPs are truncated such that only the _first_ `-TruncateTo` characters are displayed.  
 
 ### -LogDir [string]
 Optional string.  
