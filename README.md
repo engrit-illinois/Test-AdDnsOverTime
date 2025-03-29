@@ -20,9 +20,16 @@ Note that IP ranges are accepted and output with leading zeros for padding, such
 3. Run `Test-AdDnsOverTime` using the documentation below.
 
 # Example
+Basic usage:
 ```powershell
 $comps = Get-ADComputer -Filter "name -like 'lt-cart01-*'" | Sort "Name" | Select -ExpandProperty "Name" | Select -First 10
 Test-AdDnsOverTime -Computer $comps -IpRanges -IpRanges "010.000.000.*:green:;172.016.000.*::yellow"
+```
+
+Truncate names and IPs to fit many results on screen:
+```powershell
+$comps = Get-ADComputer -Filter "name -like 'lt-cart01-*'" | Sort "Name" | Select -ExpandProperty "Name"
+Test-AdDnsOverTime -Computer $comps -IpRanges "172.022.067.*:green:;172.022.039.*:yellow:" -TruncateTo 3
 ```
 
 <img title='Screenshot of example console output' alt='Screenshot of example console output' src='./example.png' />
