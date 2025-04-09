@@ -41,6 +41,7 @@ function Test-AdDnsOverTime {
 			[string]$BC = (get-host).ui.rawui.BackgroundColor, # background color
 			[switch]$NoTs,
 			[switch]$NoNl,
+			[DateTime]$Ts = (Get-Date),
 			[string]$TestNum
 		)
 		
@@ -49,8 +50,8 @@ function Test-AdDnsOverTime {
 		}
 		
 		if(-not $NoTs) {
-			$ts = Get-Date -Format "HH:mm:ss"
-			$Msg = "[$ts] $Msg"
+			$tsString = $Ts.ToString("HH:mm:ss")
+			$Msg = "[$tsString] $Msg"
 		}
 		
 		$params = @{
@@ -80,7 +81,7 @@ function Test-AdDnsOverTime {
 		}
 	}
 	
-	function Get-TestNum {
+	function Get-TestNumString {
 		param(
 			[int]$Num
 		)
@@ -110,7 +111,7 @@ function Test-AdDnsOverTime {
 			$_.PadRight($dataWidth," ")
 		}
 		$compsLine = $comps -join " | "
-		log $compsLine -TestNum (Get-TestNum -Num 0)
+		log $compsLine -TestNum (Get-TestNumString -Num 0)
 		
 		$underlineSegments = $comps | ForEach-Object {
 			$segment = ""
@@ -120,10 +121,11 @@ function Test-AdDnsOverTime {
 			$segment
 		}
 		$underline = $underlineSegments -join "-|-"
-		log $underline -TestNum (Get-TestNum -Num 0)
+		log $underline -TestNum (Get-TestNumString -Num 0)
 		
 		# Header for CSV
 		$compsLineCsv = $Computer -join ","
+		$compsLineCsv = "DateTime,TestNumber,$compsLineCsv"
 		csv $compsLineCsv
 	}
 	
@@ -171,8 +173,9 @@ function Test-AdDnsOverTime {
 	}
 	
 	function Test-Comps($testNum) {
+		$ts = Get-Date
 		# Console output timestamp and test number for current line
-		log -TestNum (Get-TestNum -Num $testNum) -NoNl
+		log -TestNum (Get-TestNumString -Num $testNum) -NoNl -Ts $ts
 		
 		# Get results of pings
 		$result = $null
@@ -240,6 +243,7 @@ function Test-AdDnsOverTime {
 		
 		# Output CSV line
 		$ipLineCsv = $ipsPadded.Replace(" ","") -join ","
+		$ipLineCsv = "$ts,$testNum,$ipLineCsv"
 		csv $ipLineCsv
 		
 		# Wait for next loop
