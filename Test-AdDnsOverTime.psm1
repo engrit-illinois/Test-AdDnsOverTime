@@ -20,6 +20,7 @@ function Test-AdDnsOverTime {
 		[switch]$ReverseTruncationForComputers,
 		[switch]$ReverseTruncationForIps,
 		
+		[string]$ConsoleTimestampFormat = "yyyy-MM-dd HH:mm:ss",
 		[string]$LogDir = "c:\engrit\logs"
 	)
 	
@@ -50,7 +51,7 @@ function Test-AdDnsOverTime {
 		}
 		
 		if(-not $NoTs) {
-			$tsString = $Ts.ToString("HH:mm:ss")
+			$tsString = $Ts.ToString($ConsoleTimestampFormat)
 			$Msg = "[$tsString] $Msg"
 		}
 		
